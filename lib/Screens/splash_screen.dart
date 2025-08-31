@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart'; // <-- Use Hive instead of SharedPreferences
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,8 +30,8 @@ class _SplashScreenState extends State<SplashScreen>
     // Keep splash visible for a short time
     await Future<void>.delayed(const Duration(seconds: 2));
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final bool hasProfile = prefs.getBool('hasProfile') ?? false;
+    var userBox = Hive.box('userData');
+    bool hasProfile = userBox.isNotEmpty; // or check for a specific key
 
     if (!mounted) return;
     if (hasProfile) {
@@ -49,11 +49,16 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final gradientColors = isDark
+        ? [const Color(0xFF232526), const Color(0xFF414345)] // Dark gradient
+        : [const Color(0xFFFFC371), const Color(0xFFFF5F6D)]; // Light gradient
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFFFC371), Color(0xFFFF5F6D)], // Sunrise colors
+            colors: gradientColors,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -63,24 +68,22 @@ class _SplashScreenState extends State<SplashScreen>
           child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                SizedBox(height: 20),
+              children: [
+                const SizedBox(height: 20),
                 Text(
                   "Elevate Emotion",
-                  style: TextStyle(
-                    fontSize: 28,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: 1.2,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   "Find your calm, lift your mood 🌸",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
                 ),
               ],
             ),
